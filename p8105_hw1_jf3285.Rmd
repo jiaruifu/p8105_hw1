@@ -1,6 +1,6 @@
 ---
 title: "p8105_hw1_jf3285"
-author: Jiarui Fu
+author: "Jiarui Fu"
 date: 2019-09-20
 output: github_document
 ---
@@ -10,12 +10,14 @@ library(tidyverse)
 ```
 
 ## Problem 1
-The purpose of this problem is to address variable types and introduce coercion.
-<br />Create a data frame comprised of:
+* The purpose of this problem is to address variable types and introduce coercion.
+* Create a data frame comprised of:
 a random sample of size 8 from a standard Normal distribution, 
 a logical vector indicating whether elements of the sample are greater than 0, 
-a character vector of length , 
+a character vector of length 8, 
 a factor vector of length 8, with 3 different factor “levels”.
+* Take the mean of each variable in the dataframe.
+* Apply as.numeric function to the logical character, and factor variables.
 ```{r df_create}
 # set seed to ensure reproducibility
 set.seed(1234)
@@ -28,35 +30,57 @@ create_df = tibble(
   vec_factor = factor(c("low", "medium", "high", "high", "medium", "low", "medium", "medium"))
 )
 
-# calculate the mean of each variable
+# return the first six rows of the data frame 
+head(create_df)
+
+# calculate the mean of each variable in the data frame
 # numeric and logical vectors work but character and factor vectors return NA
 x_mean = mean(pull(create_df, x))
 vec_logical_mean = mean(pull(create_df, vec_logical))
-# vec_char_mean = mean(vec_char)
-# vec_factor_mean = mean(vec_factor)
+# vec_char_mean = mean(pull(create_df, vec_char))
+# vec_factor_mean = mean(pull(create_df, vec_factor))
 
+# apply as.numeric function to the logical, character and factor variables
 as.numeric(pull(create_df, vec_logical))
 # as numeric(character vector) returns NA
 as.numeric(pull(create_df, vec_char))
 as.numeric(pull(create_df, vec_factor))
 ```
-This part of code chunk converts logical vectors to numeric and factor vectors.
+By taking the mean of each variable in the dataframe, it can be seen that the mean operation can be done on numeric and logical variables whereas such operation will generate errors for character and factor variables.
+
+When applying as.numeric function to explicitly coerce logical, character and factor variables into numeric variables, logical vectors were converted into 0s and 1s - corresponding to the TRUE(s)/FALSE(s), factor vectors were converted into 1s, 2s, and 3s - corresponding to the three different factor levels; however, R failed to convert character vectors into numeric vectors, generating error "NA introduced by coercion", which indicated that R could not assign numeric values to character variables composed of strings (without levels).
+
+This helps explain the situation of taking the mean: mean operation cannot be performed on character or factor vector due to its non-numeric or non-logical attribute, but factor vector can be converted into numeric vector due to its "levelness", helping R better assign numeric values.
+
+* This part of code chunk converts logical vectors to numeric and factor vectors.
 ```{r convert}
-# logical vectors convert to numeric and factor vectors
+# logical vectors are converted to numeric and factor vectors + numeric operations
+# logical -> numeric
 convert_logi_numeric = as.numeric(pull(create_df, vec_logical))
 result1 = convert_logi_numeric*(pull(create_df, x))
 result1
+
+# logical -> factor
 convert_logi_factor = as.factor(pull(create_df, vec_logical))
 result2 = convert_logi_factor*(pull(create_df, x))
 result2
+
+# logical vector -> factor -> numeric
 double_convert = as.numeric(convert_logi_factor)
 result3 = double_convert*(pull(create_df, x))
 result3
 ```
 
 ## Problem 2
-This problem focuses on the use of inline R code and plotting. 
+* This problem focuses on the use of inline R code, plotting and the bahavior of ggplot for different variable types.
+* Create a data frame comprised of:
+x: a random sample of size 500 from a standard Normal distribution,
+y: a random sample of size 500 from a standard Normal distribution,
+a logical vector indicating whether x + y > 1,
+a numeric vector created by coercing the above logical vector,
+a factor vector created by coercing the above logical vector.
 ```{r df_plot}
+# set seed to ensure reproducibility
 set.seed(1234)
 
 # create data frame
@@ -68,15 +92,26 @@ plot_df = tibble(
   factor_vec = as.factor(logi_vec)
 )
 
+# return the first six rows of the data frame 
+head(plot_df)
+
 # make and export scatterplot
+# scatterplot y vs x, color points using the logical variable
 ggplot(plot_df, aes(x=x, y=y, color=logi_vec)) + geom_point()
+# export the first scatterplot to project directory
 ggsave("scatter plot.pdf", height = 4, width = 6)
+
+# scatterplot y vs x, color points using the numeric variable
 ggplot(plot_df, aes(x=x, y=y, color=num_vec)) + geom_point()
+
+# scatterplot y vs x, color points using the factor variable
 ggplot(plot_df, aes(x=x, y=y, color=factor_vec)) + geom_point()
 ```
 
-# Description of vectors using inline R code
- The size of the dataset is `r nrow((plot_df))` and `r ncol((plot_df))`.
+From the three scatterplots genereated above, it can be seen that the two scatterplots color points using logical and factor variables look essentially the same, with legends showing the TRUE/FALSE logical/factor vectors. On the other hand, the legend of the scatterplot color points using the numeric variable is presented as a gradient based on different numeric values. This demonstrates that the color scales of logical variables are TRUE(s)&FALSE(s), the color scales of factor variables are the different levels, and the color scales of numeric variables are the different numeric values.
+
+### Description of vectors using inline R code
+ The size of the dataset is `r nrow((plot_df))` rows and `r ncol((plot_df))` columns.
  
  The mean of x is `r mean(pull(plot_df, x))`.
  
@@ -84,7 +119,8 @@ ggplot(plot_df, aes(x=x, y=y, color=factor_vec)) + geom_point()
  
  The standard deviation of x is `r sd(pull(plot_df, x))`.
  
- The proportion of cases for which x + y > 1 is `r sum(pull(plot_df, logi_vec), na.rm = TRUE)/500`
+ The proportion of cases for which x + y > 1 is `r sum(pull(plot_df, logi_vec), na.rm = TRUE)/500`.
+
  
 
 
